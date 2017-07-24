@@ -1,4 +1,25 @@
-from utils import *
+import itertools
+
+def cross(a, b):
+    "Cross product of elements in A and elements in B."
+    return [s+t for s in a for t in b]
+
+rows = 'ABCDEFGHI'
+cols = '123456789'
+cols_rev = cols[::-1]
+
+boxes = cross(rows, cols)
+
+row_units = [cross(r, cols) for r in rows]
+column_units = [cross(rows, c) for c in cols]
+square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
+diagonal_units1 = [[rows[i]+cols[i] for i in range(len(rows))]]
+diagonal_units2 = [[rows[i]+cols_rev[i] for i in range(len(rows))]]
+
+unitlist = row_units + column_units + square_units + diagonal_units1 + diagonal_units2
+units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
+peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+
 
 assignments = []
 
@@ -28,6 +49,26 @@ def naked_twins(values):
 
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
+
+    # Naked twins: two boxes in same unit that have a pair of identical digits
+    # remaining as their only possibilities
+    for unit in unitlist:
+        # Find all boxes with two digits remaining as possibilities
+        pairs = [box for box in unit if len(values[box]) == 2]
+        # Pairwise combinations
+        poss_twins = [list(pair) for pair in itertools.combinations(pairs, 2)]
+        for pair in poss_twins:
+            box1 = pair[0]
+            box2 = pair[1]
+            # Find the naked twins
+            if values[box1] == values[box2]:
+                for box in unit:
+                    # Eliminate the naked twins as possibilities for peers
+                    if box != box1 and box != box2:
+                        for digit in values[box1]:
+                            values[box] = values[box].replace(digit,'')
+    return values
+
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
@@ -110,6 +151,7 @@ def reduce_puzzle(values):
     Input: A sudoku in dictionary form.
     Output: The resulting sudoku in dictionary form.
     """
+
     stalled = False
     while not stalled:
         # Check how many boxes have a determined value
@@ -118,6 +160,8 @@ def reduce_puzzle(values):
         values = eliminate(values)
         # Use the Only Choice Strategy
         values = only_choice(values)
+        # Use naked twins strategy
+        values = naked_twins(values)
         # Check how many boxes have a determined value, to compare
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         # If no new values were added, stop the loop.
@@ -136,6 +180,7 @@ def search(values):
     Now, replace that square with a single value, and recursively run the search() function. (DFS)
 
     """
+
     # First, reduce the puzzle using the previous function
     values = reduce_puzzle(values)
     if values is False:
@@ -161,6 +206,7 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
+    grid = grid_values(grid)
     return search(grid)
 
 if __name__ == '__main__':
