@@ -3,7 +3,7 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: The naked twins problem is solved by identifying peer groups which have "naked twin" values.  In other words, two boxes that have the same pair of values.  When a "naked twin" is identified in a peer group, then the digits can be removed from all other boxes in the peer group
+A: The naked twins problem is solved by identifying peer groups which have "naked twin" values.  In other words, two boxes that have the same pair of two digit values.  When a "naked twin" is identified in a peer group, then the digits can be removed from all other boxes in the peer group
 
 The "naked twins" technique can be used as a one possible heuristic in constraint propagation for narrowing down the search space of the sudoku problem.
 
