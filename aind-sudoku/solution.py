@@ -13,8 +13,8 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-diagonal_units1 = [[rows[i]+cols[i] for i in range(len(rows))]]
-diagonal_units2 = [[rows[i]+cols_rev[i] for i in range(len(rows))]]
+diagonal_units1 = [[rows[i] + cols[i] for i in range(len(rows))]]
+diagonal_units2 = [[rows[i] + cols_rev[i] for i in range(len(rows))]]
 
 unitlist = row_units + column_units + square_units + diagonal_units1 + diagonal_units2
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
@@ -49,26 +49,28 @@ def naked_twins(values):
 
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
-
     # Naked twins: two boxes in same unit that have a pair of identical digits
     # remaining as their only possibilities
-    for unit in unitlist:
-        # Find all boxes with two digits remaining as possibilities
-        pairs = [box for box in unit if len(values[box]) == 2]
-        # Pairwise combinations
-        poss_twins = [list(pair) for pair in itertools.combinations(pairs, 2)]
-        for pair in poss_twins:
-            box1 = pair[0]
-            box2 = pair[1]
-            # Find the naked twins
-            if values[box1] == values[box2]:
-                for box in unit:
-                    # Eliminate the naked twins as possibilities for peers
-                    if box != box1 and box != box2:
-                        for digit in values[box1]:
-                            values[box] = values[box].replace(digit,'')
-    return values
+    #iterate through each peerset in the unitlist
+    
+    for peerset in unitlist:
+        pairs = []
+        for box in peerset: #iterate through all the boxes in each peer
+            if len(values[box]) == 2: #if the length of the value in that box is 2
+                pairs.append(box) #add it to the list of potential pairs
 
+        pair_combos = list(itertools.combinations(pairs, 2))  #find all the permutation of pair combinations
+
+        for combo in pair_combos:
+            pair1 = values[combo[0]]
+            pair2 = values[combo[1]]
+
+            if pair1 == pair2: #identify naked twins because finding the pair combinations that match
+                for box in peerset: #if they match, they iterate through the peerset again
+                    if box != combo[0] and box != combo[1]:  #ignoring the boxes that match the ones of the peers
+                        for digit in values[combo[0]]: #and remove the digits of the naked twins.
+                            values[box] = values[box].replace(digit, '')
+    return values
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
@@ -136,10 +138,10 @@ def only_choice(values):
     Input: Sudoku in dictionary form.
     Output: Resulting Sudoku in dictionary form after filling in only choices.
     """
-    for unit in unitlist: #iterate through all the unit sets (hori, vert, or squares)
+    for unit in unitlist: #iterate through all the unit sets (hori, vert, or squares and diagonals)
         for digit in '123456789': #iterate through all the digits from one through 9
             dplaces = [box for box in unit if digit in values[box]] #store it in the list comprehension if it occurs in the box
-            if len(dplaces) == 1: #if the length of the list comprehension is 1, that means that digit is unique
+            if len(dplaces) == 1: #if the length of the list comprehension is 1, that means that digit is unique within the peerset
                 values[dplaces[0]] = digit  #in that case, replaces the value with only that digit
     return values
 
