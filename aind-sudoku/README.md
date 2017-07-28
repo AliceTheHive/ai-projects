@@ -1,7 +1,13 @@
 # Artificial Intelligence Nanodegree
 ## Diagonal Sudoku Solver
 
-I will try to explain the intuition behind the AI sudoku solver
+I will try to explain the high level intuition behind the AI sudoku solver.  
+
+Basically, the sudoku puzzle combines **constraint propagation** technique with **depth first search**.
+
+**Contraint Propagation** is the process of reducing the search space of a problem by applying various strategies or heuristics.  In the context of sudoku, the goal is to solve the puzzle by filling out all rows, columns, and boxes with unique 1-9 values.  Taking into account this goal, constraint propagation involves applying various strategies in an attempt to narrow down the possible values for each of the squares.  Different strategies can be applied iteratively to narrow down the search space.  Sometimes, one strategy runs into a brick wall, and switching to a different strategy can make further progress.
+
+**Depth First Search** requires
 
 
 # Question 1 (Naked Twins)
@@ -14,7 +20,6 @@ The "naked twins" technique can be used as a one possible heuristic in constrain
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
 A: To solve the diagonal sudoku problem, you can just add diagonals as peer groups in the peer list.  This is because the game of sudoku is solved by satisfying conditions (unique 1-9) within each peer group.   Furthermore, all the constraint propogation strategies that we have implemented so far (only choice, naked twins, eliminate) use these peer groups to reduce the search space.  
-
 
 This is a great article by Peter Norvig which explains the approach in more detail:
 http://norvig.com/sudoku.html
