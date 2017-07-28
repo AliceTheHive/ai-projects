@@ -1,5 +1,8 @@
 # Artificial Intelligence Nanodegree
-## Introductory Project: Diagonal Sudoku Solver
+## Diagonal Sudoku Solver
+
+I will try to explain the intuition behind the AI sudoku solver
+
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
@@ -11,7 +14,6 @@ The "naked twins" technique can be used as a one possible heuristic in constrain
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
 A: To solve the diagonal sudoku problem, you can just add diagonals as peer groups in the peer list.  This is because the game of sudoku is solved by satisfying conditions (unique 1-9) within each peer group.   Furthermore, all the constraint propogation strategies that we have implemented so far (only choice, naked twins, eliminate) use these peer groups to reduce the search space.  
-
 
 
 This is a great article by Peter Norvig which explains the approach in more detail:
