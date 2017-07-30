@@ -5,7 +5,7 @@ I will try to explain the high level intuition behind the AI sudoku solver.
 
 Basically, the sudoku puzzle combines **constraint propagation** technique with **depth first search**.
 
-**Contraint Propagation** is the process of reducing the search space of a problem by applying various strategies or heuristics.  In the context of sudoku, the goal is to solve the puzzle by filling out all rows, columns, and boxes with unique 1-9 values.  Taking into account this goal, constraint propagation involves applying various strategies in an attempt to narrow down the possible values for each of the squares.  Different strategies can be applied iteratively to narrow down the search space.  Sometimes, one strategy runs into a brick wall, and switching to a different strategy can make further progress.
+**Contraint Propagation** is the process of reducing the search space of a problem by applying various strategies or heuristics.  In the context of sudoku, the goal is to solve the puzzle by filling out all rows, columns, and boxes with unique 1-9 values.  Taking into account this goal, constraint propagation involves applying various heuristics in an attempt to narrow down the possible values for each of the squares.  These heuristics can be applied iteratively to keep reducing search space. 
 
 **Depth First Search** is useful when constraint propagation fails to solve the puzzle.  After running many iterations of constraint propagation, sometimes the puzzle is still left with many possibilities and no definite solution.  In this case, using search is a good strategy.  Search allows you to branch off and try different possibilities until a solution is found.
 
