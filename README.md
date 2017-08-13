@@ -1,4 +1,4 @@
-##How to setup up conda virtual environment:
+## How to setup up conda virtual environment:
 
 1. Download the aind-environment-osx.yml file at the bottom of this page (right click, save file).
 conda env create -f aind-environment-osx.yml to create the environment.
