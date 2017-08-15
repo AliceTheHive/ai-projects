@@ -291,10 +291,9 @@ class AlphaBetaPlayer(IsolationPlayer):
         best_move = (-1, -1)
 
         try:
+            #iterate through all possible depths in the game until time runs out
             for depth in range(1, game.width * game.height):
                 best_move = self.alphabeta(game, depth)
-                #if score == float('inf'):
-                   # break
 
         except SearchTimeout:
             pass  # Handle any actions required after timeout as needed
