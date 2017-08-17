@@ -340,10 +340,15 @@ class AlphaBetaPlayer(IsolationPlayer):
                 pseudocode) then you must copy the timer check into the top of
                 each helper function or else your agent will timeout during
                 testing.
+
+        --alpha is the lowest score you are willing to accept
+        --beta is the highest score your opponent is willing to accept
+        
+        alpha beta pruning is essentially the same as minimax except you stop evaluating 
+        possible moves once you hit alpha and beta thresholds
         """
 
-        #alpha is the lowest score you are willing to accept
-        #beta is the highest score your opponent is willing to accept
+
 
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
