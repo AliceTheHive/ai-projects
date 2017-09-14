@@ -6,5 +6,5 @@
 
 ## Udacity commands:
 
-Upload and test your submission code:
+Upload and test your submission code: 
 ```udacity submit```
