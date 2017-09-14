@@ -1,7 +1,9 @@
 ## How to setup up conda virtual environment:
 
-1. 'conda env create -f aind-environment-osx.yml' to create the environment.
-2. Then 'source activate aind' to enter the environment.
+1. Create the environment.  
+```conda env create -f aind-environment-osx.yml```
+2. Enter the environment.  
+```source activate aind```
 3. Install the development version of hmmlearn 0.2.1 with a source build:  
 ```pip install git+https://github.com/hmmlearn/hmmlearn.git```
 
