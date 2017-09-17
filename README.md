@@ -11,3 +11,6 @@
 
 Upload and test your submission code:  
 ```udacity submit```
+
+## Book:
+http://aima.cs.berkeley.edu/2nd-ed/
