@@ -1,3 +1,9 @@
+# Notes
+
+### Example run_search.py commands
+```python run_search.py -p 1 -s 1```  
+```python run_search.py -p 3 -s 1```
+
 
 # Implement a Planning Search
 
