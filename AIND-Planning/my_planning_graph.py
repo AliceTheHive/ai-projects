@@ -296,14 +296,14 @@ class PlanningGraph():
             node_a = PgNode_a(action)
             # For this action node to be reachable, its preconditions must be a subset of the states in the previous state level
             if set(node_a.prenodes).issubset(self.s_levels[level]):
-                # 1. Add this action node to the new set of action nodes
+                # 1. Add this action node to the set
                 a_nodes.add(node_a)
                 # 2. Make this reachable action node a child of the previous levels state nodes
                 # 3. Make the parent of the previous levels state node this reachable action node
                 for node_s in self.s_levels[level]:
                     node_s.children.add(node_a)
                     node_a.parents.add(node_s)
-        # Build the action level from the reachable action nodes by appending the set of actions
+        # add the new action level to the list of sets of all actions
         self.a_levels.append(a_nodes)
 
     def add_literal_level(self, level):
@@ -330,13 +330,13 @@ class PlanningGraph():
         for node_a in self.a_levels[level - 1]:
             # Get the effect nodes for this action and add them to the level's state nodes
             for node_s in node_a.effnodes:
-                # Add this reachable effect node to the set of state nodes
+                #1. Add this effect node to the set of state nodes
                 s_nodes.add(node_s)
-                # Make the preceding levels action node a parent of this reachable effect node
-                # Make this reachable effect node a child of the preceding action node
+                #2. Make the previous levels action node a parent of this  effect node
+                #3. Make this effect node a child of the previous action node
                 node_s.parents.add(node_a)
                 node_a.children.add(node_s)
-        # Build the state level from the reachable effect nodes
+        # add set of stats to list of sets of all states
         self.s_levels.append(s_nodes)
 
     def update_a_mutex(self, nodeset):
@@ -392,17 +392,11 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         '''
-        # Make sure node_a1's (+) effects aren't canceled by node_a2's (-) effects
-        for effect in node_a1.action.effect_add:
-            if effect in node_a2.action.effect_rem:
-                return True
+        return (
+                    len(list(set(node_a1.action.effect_add) & set(node_a2.action.effect_rem))) > 0
+                or  len(list(set(node_a1.action.effect_rem) & set(node_a2.action.effect_add))) > 0 
+                )
 
-        # Make sure node_a2's (+) effects aren't canceled by node_a1's (-) effects
-        for effect in node_a2.action.effect_add:
-            if effect in node_a1.action.effect_rem:
-                return True
-
-        return False
 
     def interference_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
         '''
@@ -416,25 +410,12 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         '''
-        # Make sure node_a1's (+) effects don't conflict with node_a2's (-) preconditions
-        # Make sure node_a2's (+) effects don't conflict with node_a1's (-) preconditions
-        for effect in node_a1.action.effect_add:
-            if effect in node_a2.action.precond_neg:
-                return True
-        for effect in node_a2.action.effect_add:
-            if effect in node_a1.action.precond_neg:
-                return True
-
-        # Make sure node_a1's (-) effects don't conflict with node_a2's (+) preconditions
-        # Make sure node_a2's (-) effects don't conflict with node_a1's (+) preconditions
-        for effect in node_a1.action.effect_rem:
-            if effect in node_a2.action.precond_pos:
-                return True
-        for effect in node_a2.action.effect_rem:
-            if effect in node_a1.action.precond_pos:
-                return True
-
-        return False
+        return  ( 
+                    len(list(set(node_a1.action.effect_add) & set(node_a2.action.precond_neg))) > 0
+                 or len(list(set(node_a2.action.effect_add) & set(node_a1.action.precond_neg))) > 0
+                 or len(list(set(node_a1.action.effect_rem) & set(node_a2.action.precond_pos))) > 0
+                 or len(list(set(node_a2.action.effect_rem) & set(node_a1.action.precond_pos))) > 0
+                )
 
     def competing_needs_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
         '''
@@ -446,7 +427,7 @@ class PlanningGraph():
         :return: bool
         '''
 
-        # Make sure node_a1's preconditions aren't mutually exclusive with node_a2's preconditions
+        # chceck if node_a1's preconditions are mutually exclusive with node_a2's preconditions
         for precond_a1 in node_a1.parents:
             for precond_a2 in node_a2.parents:
                 if precond_a1.is_mutex(precond_a2):
@@ -483,7 +464,7 @@ class PlanningGraph():
         :return: bool
         '''
 
-        # Make sure two state literals don't have opposite polarity
+        # Make sure two state literals dont negate each other
         return node_s1.symbol == node_s2.symbol and node_s1.is_pos != node_s2.is_pos
 
     def inconsistent_support_mutex(self, node_s1: PgNode_s, node_s2: PgNode_s):
@@ -501,10 +482,10 @@ class PlanningGraph():
         :return: bool
         '''
 
-        # Make sure node_s1's preconditions aren't mutually exclusive with node_s2's preconditions
-        for precond_s1 in node_s1.parents:
-            for precond_s2 in node_s2.parents:
-                if not precond_s1.is_mutex(precond_s2):
+        # check if each possible pair of actions that could achieve the two literals/states is mutually exclusive
+        for action_s1 in node_s1.parents:
+            for action_s2 in node_s2.parents:
+                if not action_s1.is_mutex(action_s2):
                     return False
 
         return True
@@ -515,16 +496,18 @@ class PlanningGraph():
         '''
 
         level_sum = 0
-        # For each goal in the problem, determine their level cost, then add them together
+        # For each goal in the problem, sum up all the level costs
         for goal in self.problem.goal:
-            goal_found = False
+            found = False
             for level in range(len(self.s_levels)):
                 for state in self.s_levels[level]:
                     if goal == state.literal:
-                        goal_found = True
+                        found = True
+                        #add the level cost to the total
                         level_sum += level
                         break
-                if goal_found:
+                #break out of the loop and move on to the next goal
+                if found:
                     break
 
         return level_sum

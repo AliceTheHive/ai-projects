@@ -201,8 +201,7 @@ class AirCargoProblem(Problem):
         """
         # requires implemented PlanningGraph class
         pg = PlanningGraph(self, node.state)
-        pg_levelsum = pg.h_levelsum()
-        return pg_levelsum
+        return pg.h_levelsum()
 
     @lru_cache(maxsize=8192)
     def h_ignore_preconditions(self, node: Node):
@@ -214,12 +213,11 @@ class AirCargoProblem(Problem):
         # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
         kb = PropKB()
         kb.tell(decode_state(node.state, self.state_map).pos_sentence())
-        kb_clauses = kb.clauses
-        actions_count = 0
+        count = 0
         for clause in self.goal:
-            if clause not in kb_clauses:
-                actions_count += 1
-        return actions_count
+            if clause not in kb.clauses:
+                count += 1
+        return count
 
 
 
