@@ -363,7 +363,7 @@ class PlanningGraph():
                         self.competing_needs_mutex(n1, n2)):
                     mutexify(n1, n2)
 
-    def serialize_actions(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
+    def serialize_actions(self, node_a1: PgNode_a, node_a2: PgNode_a) bool:
         '''
         Test a pair of actions for mutual exclusion, returning True if the
         planning graph is serial, and if either action is persistent; otherwise
@@ -373,7 +373,7 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         '''
-        #
+        
         if not self.serial:
             return False
         if node_a1.is_persistent or node_a2.is_persistent:
@@ -494,6 +494,8 @@ class PlanningGraph():
         '''The sum of the level costs of the individual goals (admissible if goals independent)
         :return: int
         '''
+
+
 
         level_sum = 0
         # For each goal in the problem, sum up all the level costs

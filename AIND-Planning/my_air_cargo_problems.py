@@ -188,7 +188,7 @@ class AirCargoProblem(Problem):
         return True
 
     def h_1(self, node: Node):
-        # note that this is not a true heuristic
+        # note that this is not a true heuristic, just returns one as the heuristic
         h_const = 1
         return h_const
 
@@ -211,13 +211,17 @@ class AirCargoProblem(Problem):
         executed.
         """
         # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
+        
+        #instantiate the KB knowledge handler
         kb = PropKB()
+
+        # Add the current states positive clauses to the propositional logic KB
         kb.tell(decode_state(node.state, self.state_map).pos_sentence())
-        count = 0
+        action_count = 0
         for clause in self.goal:
             if clause not in kb.clauses:
-                count += 1
-        return count
+                action_count += 1
+        return action_count
 
 
 
