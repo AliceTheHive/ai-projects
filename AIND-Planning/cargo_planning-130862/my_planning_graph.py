@@ -289,21 +289,20 @@ class PlanningGraph():
         #   to see if a proposed PgNode_a has prenodes that are a subset of the previous S level.  Once an
         #   action node is added, it MUST be connected to the S node instances in the appropriate s_level set.
 
-        # create set object for the new level of action nodes
-        a_nodes = set()
+        a_nodes = []
         for action in self.all_actions:
-            # create action node for each action
+            # Build an action Node for this action
             node_a = PgNode_a(action)
-            # For this action node to be reachable, its preconditions must be a subset of the states in the previous state level
-            if set(node_a.prenodes).issubset(self.s_levels[level]):
-                # 1. Add this action node to the new set of action nodes
-                a_nodes.add(node_a)
-                # 2. Make this reachable action node a child of the previous levels state nodes
-                # 3. Make the parent of the previous levels state node this reachable action node
+            # For this action node to be reachable, its preconditions must be satisfied by the previous state level
+            if node_a.prenodes.issubset(self.s_levels[level]):
+                # Add this reachable action node to the list of action nodes
+                # Make this reachable action node a child of the preceding level's state nodes
+                # Make the preceding level's state nodes parents of this reachable action node
+                a_nodes.append(node_a)
                 for node_s in self.s_levels[level]:
                     node_s.children.add(node_a)
                     node_a.parents.add(node_s)
-        # Build the action level from the reachable action nodes by appending the set of actions
+        # Build the action level from the reachable action nodes
         self.a_levels.append(a_nodes)
 
     def add_literal_level(self, level):
@@ -323,17 +322,14 @@ class PlanningGraph():
         #   all of the new S nodes as children of all the A nodes that could produce them, and likewise add the A nodes to the
         #   parent sets of the S nodes
 
-        #create set for new state level
         s_nodes = set()
-
-        #iterate through actions in the preceding level
         for node_a in self.a_levels[level - 1]:
-            # Get the effect nodes for this action and add them to the level's state nodes
+            # Get the effect nodes for this preceding action and add them to the level's state nodes
             for node_s in node_a.effnodes:
                 # Add this reachable effect node to the set of state nodes
-                s_nodes.add(node_s)
-                # Make the preceding levels action node a parent of this reachable effect node
+                # Make the preceding level's action node a parent of this reachable effect node
                 # Make this reachable effect node a child of the preceding action node
+                s_nodes.add(node_s)
                 node_s.parents.add(node_a)
                 node_a.children.add(node_s)
         # Build the state level from the reachable effect nodes
@@ -352,10 +348,8 @@ class PlanningGraph():
         :return:
             mutex set in each PgNode_a in the set is appropriately updated
         '''
-
-        #basically, compare all pairs of actions and mutexify them if they trigger any mutex conditions.
         nodelist = list(nodeset)
-        for i, n1 in enumerate(nodelist[:-1]):  #all except last item
+        for i, n1 in enumerate(nodelist[:-1]):
             for n2 in nodelist[i + 1:]:
                 if (self.serialize_actions(n1, n2) or
                         self.inconsistent_effects_mutex(n1, n2) or
