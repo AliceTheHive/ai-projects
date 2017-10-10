@@ -349,7 +349,7 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
 
 
-
+        #if time limit is exceeded, raise an error
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 

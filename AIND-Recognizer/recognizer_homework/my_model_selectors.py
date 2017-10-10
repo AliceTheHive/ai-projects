@@ -96,7 +96,7 @@ class SelectorBIC(ModelSelector):
             pass
 
         if bic_scores:
-            best_state = self.n_components[np.argmin(bic_scores)] 
+            best_state = self.n_components[np.argmax(bic_scores)] 
         else:
             best_state = self.n_constant
         return self.base_model(best_state)
