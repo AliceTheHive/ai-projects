@@ -158,7 +158,7 @@ class SelectorCV(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         mean_scores = []
-        split_method = KFold()
+        split_method = KFold(4)
 
         try:
             for n_component in self.n_components:
