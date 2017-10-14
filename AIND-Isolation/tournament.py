@@ -21,9 +21,9 @@ from isolation import Board
 from sample_players import (RandomPlayer, open_move_score,
                             improved_score, center_score)
 from game_agent import (MinimaxPlayer, AlphaBetaPlayer, defensive,
-                        aggressive, cutoff_heuristics)
+                        aggressive, center_play, defensive_to_aggressive)
 
-NUM_MATCHES = 10  # number of matches against each opponent
+NUM_MATCHES = 25  # number of matches against each opponent
 TIME_LIMIT = 150  # number of milliseconds before timeout
 
 DESCRIPTION = """
@@ -132,7 +132,8 @@ def main():
         Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved"),
         Agent(AlphaBetaPlayer(score_fn=defensive), "defensive"),
         Agent(AlphaBetaPlayer(score_fn=aggressive), "aggressive"),
-        Agent(AlphaBetaPlayer(score_fn=cutoff_heuristics), "cutoff heuristics")
+        Agent(AlphaBetaPlayer(score_fn=center_play), "center play"),
+        Agent(AlphaBetaPlayer(score_fn=defensive_to_aggressive), "defensive to aggressive")
     ]
 
     # Define a collection of agents to compete against the test agents

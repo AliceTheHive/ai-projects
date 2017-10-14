@@ -37,6 +37,11 @@ def defensive(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
 
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
@@ -48,11 +53,18 @@ def aggressive(game, player):
     """
     My moves minus my opponents moves (Aggressive)
     """
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
+
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
     score = float(own_moves - 2*opp_moves)
 
     return score
+
 
 def distance_from_center(game, current_position):
     """
@@ -60,39 +72,51 @@ def distance_from_center(game, current_position):
     """
     x, y = current_position
     center_x, center_y = game.width / 2, game.height / 2
-    return (game.width - center_x) ** 2 + (game.height - center_y) ** 2 - (x - center_x) ** 2 - (y - center_y) ** 2
+    score = ((game.width - center_x) ** 2 + (game.height - center_y) ** 2 - (x - center_x) ** 2 - (y - center_y) ** 2) ** 1/2 * 3
 
-def cutoff_heuristics(game, player):
-    """Changes the coefficients applied to player and its opponent based
-    on where we are in the game.
-    At the beginning of the game (blanks > 35), be more aggressive:
-    own_moves - 3 * opp_moves
-    At the end of the game, be more defensive:
-    3 * own_moves - opp_moves
-    Parameters
-    ----------
-    game : `isolation.Board`
-        An instance of `isolation.Board` encoding the current state of the
-        game (e.g., player locations and blocked cells).
-    player : hashable
-        One of the objects registered by the game object as a valid player.
-        (i.e., `player` should be either game.__player_1__ or
-        game.__player_2__).
-    Returns
-    ----------
-    float
-        The heuristic value of the current game state
+    return score
+
+def center_play(game, player):
     """
+    Stanard my moves minus my opponents moves heuristic along with a
+    heuristic that rewards play near the center
+    """
+    if game.is_loser(player):
+        return float("-inf")
 
-    blanks = len(game.get_blank_spaces())
+    if game.is_winner(player):
+        return float("inf")
+
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    final_score = own_moves - opp_moves + distance_from_center(game,game.get_player_location(player))
+    
+    return float(final_score)
+
+
+def defensive_to_aggressive(game, player):
+    """
+    As the game progresses, the AI will shift from playing defensively 
+    to aggressively.
+
+    At the beginning of the game, you will try to maximize the number of moves you have
+    At the end of the game, you will try to minimize the amount of moves the opponent has
+    """
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
 
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
-    if blanks > 35:
-        return float(own_moves - 3 * opp_moves)
-    else:
-        return float(3 * own_moves - opp_moves)
+    #the number of blank spaces is the inverse of game length
+    num_blanks = len(game.get_blank_spaces())
+
+    final_score = own_moves * num_blanks/3 + opp_moves * 3/max(1,num_blanks)
+
+    return float(num_blanks)
 
 class IsolationPlayer:
     """Base class for minimax and alphabeta agents -- this class is never
