@@ -27,17 +27,22 @@ class ModelSelector(object):
         self.max_n_components = max_n_components
         self.random_state = random_state
         self.verbose = verbose
+        self.n_components = range(self.min_n_components, self.max_n_components + 1)
 
     def select(self):
         raise NotImplementedError
 
-    def base_model(self, num_states, X=self.X, lengths=self.lengths):
-        # with warnings.catch_warnings():
+    def base_model(self, num_states, X=None, lengths=None):
+        
+        if X is None:
+            X = self.X
+        if lengths is None:
+            lengths = self.lengths
+
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        # warnings.filterwarnings("ignore", category=RuntimeWarning)
         try:
             hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
-                                    random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
+                                    random_state=self.random_state, verbose=False).fit(X, lengths)
             if self.verbose:
                 print("model created for {} with {} states".format(self.this_word, num_states))
             return hmm_model
@@ -81,18 +86,28 @@ class SelectorBIC(ModelSelector):
         # p = is the number of parameters
         # N = is the number of data points
 
+        This model penalizes for model complexity
+
+        p is the sum of four terms:
+
+        - The free transition probability parameters, which is the size of the transmat matrix
+        - The free starting probabilities
+        - Number of means
+        - Number of covariances which is the size of the covars matrix
+
         """
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         bic_scores = []
+        alpha = 1 # add a parameter alpha to the free parameters to provide a weight to the free parameters, serves as a regularization parameter
         try:
             for n in self.n_components:
-
                 model = self.base_model(n)
                 log_l = model.score(self.X, self.lengths)
-                p = n ** 2 + 2 * n * model.n_features - 1
-                bic_score = -2 * log_l + p * math.log(n)
+                #p = n ** 2 + 2 * n * model.n_features - 1
+                p = (model.startprob_.size - 1) + (model.transmat_.size - 1) + model.means_.size + model.covars_.diagonal().size
+                bic_score = -2 * log_l + p * math.log(n) * alpha
                 bic_scores.append(bic_score)
-        except Exception as e:
+        except (ValueError, AttributeError) as e:
             pass
 
         if bic_scores:
@@ -103,7 +118,8 @@ class SelectorBIC(ModelSelector):
 
 
 class SelectorDIC(ModelSelector):
-    ''' select best model based on Discriminative Information Criterion
+    ''' 
+    Select best model based on Discriminative Information Criterion
 
     Biem, Alain. "A model selection criterion for classification: Application to hmm topology optimization."
     Document Analysis and Recognition, 2003. Proceedings. Seventh International Conference on. IEEE, 2003.
@@ -111,20 +127,30 @@ class SelectorDIC(ModelSelector):
     DIC = log(P(X(i)) - 1/(M-1)SUM(log(P(X(all but i))
 
     My Notes:
-    SUM(log(P(X(all but i) : sum all the log_l except the log_l of the current model
-    1/(M-1) : divide by the number of models
+    SUM(log(P(X(all but i) : sum all the log_l except the log_l of the current model / word
+    1/(M-1) : divide by the number of models / words
     log(P(X(i)) log_l of the current model
 
     Putting it all together:
     log(P(X(i)) - 1/(M-1)SUM(log(P(X(all but i))
 
-    I guess you are trying to find the greatest difference between  the target model and other models,
-    so you are trying to maximum the difference between the log likelihoods.
+    I guess you are trying to find the greatest difference between the target model 
+    and other models in order to reduce false positives.
 
+    For example, it is searching a model for the word FISH. So, it takes into account how well the model performs when the FISH word appears.
+
+    But what happen if it detects the word DOG as FISH? 
+    the idea is to test the model with the other words data to 
+    see if it's doing false positives. So, it comes up with a formula 
+    that adds the word detection less the mistake of confusing it with other words (in average).
+
+    DIC = actual_word_score - 1 / (total_words_qty-1) sum(rest_words_score)
 
     '''
 
-    def select(self):
+    """
+    #this is incorrect, ignore this
+    def select_old(self):  
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         dic_scores = []
         logs_l = []
@@ -145,6 +171,60 @@ class SelectorDIC(ModelSelector):
         else:
             best_state = self.n_constant
         return self.base_model(best_state)
+    """
+
+    #this should be the correct way to do it
+    def select(self):
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+        # for each of the num hidden components to try
+        # fit on train
+        # score on train
+        # score on everything else
+        results = {}
+        antiRes = {}
+        dic_scores = []
+
+        try:
+            for n_component in self.n_components:
+                antiLogL = 0.0
+                wc = 0
+
+                #compute actual word score
+                model = self.base_model(n_component)
+                logL = model.score(self.X, self.lengths)
+
+                #compute the rest words score
+                for word in self.hwords.keys():
+                    if word == self.this_word:
+                        continue
+                    X, lengths = self.hwords[word]
+
+                    antiLogL += model.score(X, lengths)
+                    wc += 1
+
+                # normalize by dividing by word count
+                antiLogL /= float(wc)
+
+                # store off result
+                results[n_component] = logL
+                antiRes[n_component] = antiLogL
+
+                # comupte the dic diff
+                dic = results[n_component] - antiRes[n_component]
+                dic_scores.append(dic)
+
+                #alternate method
+                #other_word_penalty = np.mean( [ model.score(*self.hwords[word]) for word in self.words if word != self.this_word ] )
+
+        except (ValueError, AttributeError) as e:
+            pass
+
+        if dic_scores:
+            best_state = self.n_components[np.argmax(dic_scores)]
+        else:
+            best_state = self.n_constant
+        return self.base_model(best_state)
 
 
 class SelectorCV(ModelSelector):
@@ -157,8 +237,10 @@ class SelectorCV(ModelSelector):
 
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        mean_scores = []
-        split_method = KFold(4)
+        final_scores = []
+
+        n_splits = min(4, max(len(self.sequences),2))
+        split_method = KFold(n_splits)
 
         try:
             for n_component in self.n_components:
@@ -175,12 +257,12 @@ class SelectorCV(ModelSelector):
                     test_score = model.score(test_X, test_length)
                     kfold_scores.append(test_score)
                 # finally, compute mean of all fold scores
-                mean_scores.append(np.mean(kfold_scores))
-        except Exception as e:
+                final_scores.append(np.mean(kfold_scores))
+        except (ValueError, AttributeError) as e:
             pass
 
-        if mean_scores:
-            best_state = self.n_components[np.argmax(dic_scores)]
+        if final_scores:
+            best_state = self.n_components[np.argmax(final_scores)]
         else:
             best_state = self.n_constant
         return self.base_model(best_state)

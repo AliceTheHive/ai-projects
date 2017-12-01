@@ -34,6 +34,7 @@ def recognize(models: dict, test_set: SinglesData):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     probabilities = []
     guesses = []
+    log_like = {}
 
     X_lengths = test_set.get_all_Xlengths() #get all the sequences and lengths from the test set
     for X, lengths in X_lengths.values(): #iterate through all the word sequences in the test set
@@ -51,12 +52,13 @@ def recognize(models: dict, test_set: SinglesData):
             except:
                 pass
 
+            #append the log loglihood
+            log_like[word] = max_score
+
         #append the best guess to the list
         guesses.append(best_guess)
 
-        #append the log loglihood
-        log_like = {}
-        log_like[word] = max_score
+
         probabilities.append(log_like)
 
     return probabilities, guesses
