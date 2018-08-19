@@ -12,6 +12,15 @@
 Upload and test your submission code:  
 ```udacity submit```
 
+## Useful conda commands
+
+Exit from the virtual environement: <br>
+```source deactivate```
+
+List available virtual environments: <br>
+```conda list env```
+
+
 ## Book:
 http://aima.cs.berkeley.edu/2nd-ed/
 
