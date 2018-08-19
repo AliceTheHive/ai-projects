@@ -20,6 +20,9 @@ Exit from the virtual environement: <br>
 List available virtual environments: <br>
 ```conda list env```
 
+Equivalent of `pip freeze` <br>
+```conda list --export```
+
 
 ## Book:
 http://aima.cs.berkeley.edu/2nd-ed/
